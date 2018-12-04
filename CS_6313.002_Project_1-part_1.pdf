@@ -1,0 +1,560 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={CS6313.002 Project 1-part 1},
+            pdfauthor={Shweta Rakesh Sahalot(sxs180145), Siddhi Chechani (sxc170042)},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{CS6313.002 Project 1-part 1}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Shweta Rakesh Sahalot(sxs180145), Siddhi Chechani (sxc170042)}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{December 3, 2018}
+
+
+\begin{document}
+\maketitle
+
+\subsection{Abstract}\label{abstract}
+
+The aim of the project is to implement different statistical methods on
+the TENXPAY Token transaction data.The results of the methods are
+analyzed to derive inferences about the token data.In 4.1, we found how
+many times a user buys or sells the TENXPAY token, then fit a
+distribution and estimate the best distribution.In 4.2, we find the
+correlation between the TENXPAY Token price data and layer features of
+the TENXPAY Token.In 4.3, we find the most active buyer and seller of
+our TENXPAY token and then track them in all other tokens, plot how many
+unique tokens have they invested in the provided time frame then fit and
+estimate distributions as part 1. In 4.4, we created a multiple linear
+regression model to explain price return on day t.
+
+\subsection{Introduction}\label{introduction}
+
+\subsubsection{1.1 Key Concepts:}\label{key-concepts}
+
+Let us first understand a few concepts, before we get into the detailing
+of the project
+
+\paragraph{1.1.1 Blockchain:}\label{blockchain}
+
+It is a public ledger formed of multiple blocks.Each block contains
+crytographic hash of the previous block, transaction data, timestamp and
+other metadata.The blockchain is a chain of these blocks linked together
+cryptographically and stored on a distributed peer-to-peer network.
+
+\paragraph{1.1.2 Ethereum}\label{ethereum}
+
+Ethereum is adecentralized platform that runs smart contracts:
+applications that run exactly as programmed without any possibility of
+downtime, censorship, fraud or third-party interference.
+
+These apps run on a custom builtblockchain, an enormously powerful
+shared global infrastructure that can move value around and represent
+the ownership of property.
+
+Smart Contract is a set of instructions of the format if-this-then-that,
+it is formed when someone needs to performing particular task involving
+one or more than one entities of the blockchain. The contract is a code
+which executes itself on occurence of a triggering event such as
+expiration date.The smart contracts can be written with different
+languages such as solidity
+
+The EVM is a runtime environment for smart contracts in Ethereum. Every
+Ethereum node in the network runs an EVM implementation and executes the
+same instructions.
+
+Ether is the digital currency(cryptocurrency) of Ethereum. Every
+individual transaction or step in a contract requires some computation.
+To perform any computation user has to pay a cost calulated in terms of
+`Gas' and paid in terms of `Ether'. The Gas consist of two parts:
+
+Gas limit: It is the amount of units of gas Gas price: It is the amount
+paid per unit of gas
+
+\paragraph{1.1.3 Ethereum ERC-20 Tokens:}\label{ethereum-erc-20-tokens}
+
+If a user needs some service provided by the DAPPS, then he has to pay
+for that service in terms of `token' associated with the DAPPS. These
+Ethereum tokens can be bought using Ether or other cryptocurrencies and
+can serve the following two purposes:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi})}
+\tightlist
+\item
+  Usage Token: These tokens are used to pay for the services of the Dapp
+\item
+  Work Token: These tokens identify you as a shareholder in the DAPP
+\end{enumerate}
+
+ERC-20 is a technical standard used for smart contracts on the Ethereum
+Blockchain for implementing tokens. It is a common list of rules for
+Ethereum token regarding interactions between tokens,transferring tokens
+between addresses and how data within th e token is accessed
+
+\subsubsection{1.2.1 Project Primary Token:
+Tenxpay}\label{project-primary-token-tenxpay}
+
+When we as the co-founders of TenX got together to start this company,
+it was our vision to have assets on the blockchain be not only available
+to industry insiders, but rather something that can be used by any
+individual user in the ``real world''.
+
+Additionally, with the emergence of more and more different tokens, a
+growing number of users and businesses truly struggle to leverage on the
+existing infrastructure to make this interconnectedness of physical and
+virtual platforms become a reality.
+
+At TenX, we strive to offer the user access to as large as possible a
+range of blockchain assets at a maximum degree of convenience, while
+adhering to the highest security standards in the ecosystem
+
+To the end-user, we offer the TenX Card, a debit (and, in time to come,
+credit) card, with an accompanying TenX Wallet, a mobile wallet that can
+be funded not only with Bitcoin (BTC),Ether (ETH), and Dash (DASH) as
+currently possible, but also with virtually any blockchain asset in time
+to come. TenX payment facilities which include the physical and virtual
+debit card can be used in almost 200 countries at over 36 million points
+of acceptance today.
+
+This is possible as we have card issuance partnerships with major credit
+card companies.
+
+Moreover, users and businesses can exchange their blockchain assets
+seamlessly from one user to another in a decentralized manner, removing
+any risk that is usually associated with current centralized solutions.
+
+\paragraph{1.2.1.1 Product Advantages:}\label{product-advantages}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi})}
+\tightlist
+\item
+  Multi-asset (any blockchain asset compatible with and accepted by the
+  TenX Wallet)
+\item
+  Assets stay in cryptocurrency
+\item
+  Best available foreign exchange and transaction fees (with no other
+  charges)
+\item
+  Decentralized and trustless storage
+\end{enumerate}
+
+\subsubsection{1.2.2 Tenxpay Token:}\label{tenxpay-token}
+
+TenX connects your blockchain assets for everyday use. TenX's debit card
+and banking licence will allow us to be a hub for the blockchain
+ecosystem to connect for real-world use cases.
+
+Details: 12/03/2018
+
+1 PAY = \$0.67 USD Market Cap = \$29,302,619.00 USD\\
+Circulating Supply = 109,347,861.00 PAY\\
+Total Supply = (\$54,993,597.93) 205,218,255.948577763364408207 PAY
+Subunits = \(10^18\)
+
+\subsection{2. Data Description}\label{data-description}
+
+The Data used for the project is divided in two parts:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi})}
+\tightlist
+\item
+  Token network edge files:
+\end{enumerate}
+
+There are 40 Token network edge files.Token edge files have 4 columns:
+from\_node, to\_node, unix-time, total-amount.For each row it implies
+that from\_node sold total-amount of the token to to\_nodeid at time
+unix-time.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\tightlist
+\item
+  from\_node : Id which sells the token in the transaction\\
+\item
+  to\_node : Id which buys the token in the transaction\\
+\item
+  unixtime : Unix time of the transaction\\
+\item
+  totalamount : Total amount of the storj token involved in the
+  transaction For Part 1,2 and 4 of the project we will only use the
+  STORJ token network edge file. For part 3 we will use the token
+  network edge files of all 40 tokens.
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi})}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  Token price files: Price dataset for ten token it contains 334 rows
+  and 7 columns as follows:\\
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\tightlist
+\item
+  Date\\
+\item
+  Open : Opening price of the token on that day\\
+\item
+  High : Max price of the token on that day\\
+\item
+  Low : Min price of the token on that day\\
+\item
+  Close : Closing price of the token on that day\\
+\item
+  Volume : Volume of the token on that day\\
+\item
+  Market Cap: Market Cap of that token on that day We use price data in
+  part 2 and 4.
+\end{enumerate}
+
+\subsection{3. Preprocessing}\label{preprocessing}
+
+There could be some records in the transactions where total amount is
+very large. Some of this records could be due to some bug or
+glitch(integer overflow problem). These values can be separated from
+data using a threshold value.
+
+Calculating this value for the STORJ token:The value of transaction
+amount can't be greater than the max value where, max value = total
+supply of tokens * subunits.subsituting the values from above.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{##Load Token }
+\NormalTok{data <-}\StringTok{ }\KeywordTok{read.delim}\NormalTok{(}\StringTok{"networktenxpayTX.txt"}\NormalTok{,}\DataTypeTok{header=}\OtherTok{FALSE}\NormalTok{,}\DataTypeTok{sep=}\StringTok{" "}\NormalTok{)}
+\NormalTok{tokenFrame<-}\KeywordTok{as.data.frame}\NormalTok{(data)}
+\KeywordTok{colnames}\NormalTok{(tokenFrame)<-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{" fromNodeID"}\NormalTok{, }\StringTok{"toNodeID"}\NormalTok{, }\StringTok{"Time"}\NormalTok{, }\StringTok{"Amount"}\NormalTok{)}
+
+\NormalTok{##  fromNodeID  toNodeID    Time              Amount}
+\NormalTok{##  560         1452        1524611450        1.728672e+20}
+\NormalTok{##  2011173     2011174     1524611865        4.556238e+20}
+\NormalTok{##  75989       1822217     1524612292        5.795000e+20}
+\NormalTok{##  40002       6382858     1524612655        4.481100e+20}
+\NormalTok{##  17          2029263     1524612851        4.998000e+21}
+\NormalTok{##  222770      4848204     1524612957        3.283584e+20}
+
+\CommentTok{#Claculating Outlier Threshold}
+\NormalTok{x <-}\StringTok{ }\FloatTok{205218255.948577763364408207}
+\NormalTok{y <-}\StringTok{ }\DecValTok{10}\OperatorTok{^}\DecValTok{18}
+\NormalTok{threshold <-}\StringTok{ }\NormalTok{x}\OperatorTok{*}\NormalTok{y}
+
+\NormalTok{## Finding Outliers}
+\NormalTok{Outlierdata <-tokenFrame[}\KeywordTok{which}\NormalTok{(tokenFrame}\OperatorTok{$}\NormalTok{Amount}\OperatorTok{>}\StringTok{ }\NormalTok{threshold),]}
+
+\NormalTok{## Total number of Outliers}
+\KeywordTok{message}\NormalTok{(}\StringTok{"Total number of outliers: "}\NormalTok{, }\KeywordTok{length}\NormalTok{(Outlierdata}\OperatorTok{$}\NormalTok{tokenAmount))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Total number of outliers: 0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{## Data Without Outliers}
+\NormalTok{data1 <-tokenFrame[}\KeywordTok{which}\NormalTok{(tokenFrame}\OperatorTok{$}\NormalTok{Amount}\OperatorTok{<}\StringTok{ }\NormalTok{threshold),]}
+\KeywordTok{View}\NormalTok{(data1)}
+
+\NormalTok{## Distribution }
+\NormalTok{##  fromNodeID  toNodeID    Time              Amount}
+\NormalTok{##  560         1452        1524611450        1.728672e+20}
+\NormalTok{##  2011173     2011174     1524611865        4.556238e+20}
+\NormalTok{##  75989       1822217     1524612292        5.795000e+20}
+\NormalTok{##  40002       6382858     1524612655        4.481100e+20}
+\NormalTok{##  17          2029263     1524612851        4.998000e+21}
+\NormalTok{##  222770      4848204     1524612957        3.283584e+20}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{4.Token Data Analysis}\label{token-data-analysis}
+
+\subsubsection{4.1 Finad and Fit
+Distribution}\label{finad-and-fit-distribution}
+
+\textbf{The package we use to fit distribution: } fitdistrplus, provide
+the function fitdist() we can use to fit distribution of our data.
+\textbf{The function we use to fit distribution: } fitdist(). Fit of
+univariate distributions to different type of data with different
+estimate method we can choose: maximum likelihood estimation (mle),
+moment matching estimation (mme), quantile matching estimation (qme),
+maximizing goodness-of-fit estimation (mge), the default and we mostly
+used one is MLE. Output of this function is S3 object, we can use
+several methods like plot(), print(), summary() to visualize it or get
+more detailed information.We use plot in this project.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{## Table 1: BUyer Transaction and its frequency }
+\NormalTok{BuyerData <-}\StringTok{ }\NormalTok{(}\KeywordTok{table}\NormalTok{(data1[}\DecValTok{2}\NormalTok{]))}
+\NormalTok{DataFrequency <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(BuyerData)}
+\KeywordTok{colnames}\NormalTok{(DataFrequency) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"UserID"}\NormalTok{, }\StringTok{"frequency"}\NormalTok{)}
+\KeywordTok{View}\NormalTok{(DataFrequency)}
+
+\NormalTok{##  UserID      frequency}
+\NormalTok{##  5           20}
+\NormalTok{##  8           244}
+\NormalTok{##  13          2}
+\NormalTok{##  15          1}
+\NormalTok{##  17          14}
+\NormalTok{##  22          7}
+\NormalTok{##  26          130}
+
+
+\NormalTok{## Table 2: Frequency of No_of_Transactions}
+\NormalTok{FreqBuyers=}\StringTok{ }\KeywordTok{table}\NormalTok{(DataFrequency}\OperatorTok{$}\NormalTok{frequency)}
+\NormalTok{frenumbuy=}\KeywordTok{as.data.frame}\NormalTok{(FreqBuyers)}
+\KeywordTok{colnames}\NormalTok{(frenumbuy)<-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"No_of_Trasactions"}\NormalTok{, }\StringTok{"Count"}\NormalTok{)}
+\KeywordTok{View}\NormalTok{(frenumbuy)}
+
+\NormalTok{##  No_of_Transctions   Count}
+\NormalTok{##  1                   84884}
+\NormalTok{##  2                   24985}
+\NormalTok{##  3                   8990}
+\NormalTok{##  4                   4375}
+\NormalTok{##  5                   2376}
+\NormalTok{##  6                   1482}
+\NormalTok{##  7                   87}
+
+
+\NormalTok{## Bar Plot}
+\KeywordTok{barplot}\NormalTok{(frenumbuy}\OperatorTok{$}\NormalTok{Count, }\DataTypeTok{names.arg =}\NormalTok{ frenumbuy}\OperatorTok{$}\NormalTok{No_of_Trasactions, }\DataTypeTok{ylab=}\StringTok{" Count"}\NormalTok{, }\DataTypeTok{xlab=}\StringTok{"No_of_Transactions"}\NormalTok{, }\DataTypeTok{xlim=}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{40}\NormalTok{),}\DataTypeTok{ylim=}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{500}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CS_6313.002_Project_1-part_1_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# fit distribution}
+\KeywordTok{library}\NormalTok{(fitdistrplus)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: MASS
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: survival
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: npsurv
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: lsei
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Poisson Distribution}
+\NormalTok{fit <-}\StringTok{ }\KeywordTok{fitdist}\NormalTok{(frenumbuy}\OperatorTok{$}\NormalTok{Count, }\StringTok{"pois"}\NormalTok{, }\DataTypeTok{method=}\StringTok{"mle"}\NormalTok{)}
+\CommentTok{# Exponential Distribution}
+\NormalTok{fit1 <-}\StringTok{ }\KeywordTok{fitdist}\NormalTok{(frenumbuy}\OperatorTok{$}\NormalTok{Count, }\StringTok{"exp"}\NormalTok{,}\DataTypeTok{method =} \StringTok{"mme"}\NormalTok{)}
+\CommentTok{# Normal Distribution}
+\NormalTok{fit2 <-}\StringTok{ }\KeywordTok{fitdist}\NormalTok{(frenumbuy}\OperatorTok{$}\NormalTok{Count, }\StringTok{"norm"}\NormalTok{)}
+\KeywordTok{plot}\NormalTok{(fit1)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CS_6313.002_Project_1-part_1_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{plot}\NormalTok{(fit)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CS_6313.002_Project_1-part_1_files/figure-latex/unnamed-chunk-3-2.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{plot}\NormalTok{(fit2)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CS_6313.002_Project_1-part_1_files/figure-latex/unnamed-chunk-3-3.pdf}
+The sells part is similiar to buys part, so we didn't show the code in
+this report, the follow is the plot of sells:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Fit Distribution -- Sells}
+\NormalTok{##Table 3: Seller Transaction and its frequency}
+\NormalTok{SellerData <-}\StringTok{ }\NormalTok{(}\KeywordTok{table}\NormalTok{(data1[}\DecValTok{1}\NormalTok{]))}
+\NormalTok{Data2frequency <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(SellerData)}
+\KeywordTok{colnames}\NormalTok{(Data2frequency) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"SellerID"}\NormalTok{, }\StringTok{"frequency"}\NormalTok{)}
+\KeywordTok{View}\NormalTok{(Data2frequency)}
+
+\NormalTok{##  SellerID        frequency}
+\NormalTok{##  5               1}
+\NormalTok{##  8               413}
+\NormalTok{##  13              83}
+\NormalTok{##  15              1}
+\NormalTok{##  17              92081}
+\NormalTok{##  22              5}
+\NormalTok{##  26              290}
+
+\NormalTok{## Table 4: Frequency of No_of_Transactions}
+\NormalTok{FreqSellers=}\StringTok{ }\KeywordTok{table}\NormalTok{(Data2frequency}\OperatorTok{$}\NormalTok{frequency)}
+\NormalTok{frenumsell =}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(FreqSellers)}
+\KeywordTok{colnames}\NormalTok{(frenumsell) <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"No_of_Sells"}\NormalTok{, }\StringTok{"Count"}\NormalTok{)}
+\KeywordTok{View}\NormalTok{(frenumsell)}
+
+\NormalTok{##  No_of_Sells   Count}
+\NormalTok{##  1             51681}
+\NormalTok{##  2             11039}
+\NormalTok{##  3             4213}
+\NormalTok{##  4             2091}
+\NormalTok{##  5             1084}
+\NormalTok{##  6             701}
+\NormalTok{##  7             453}
+
+\NormalTok{##Bar Plot}
+\KeywordTok{barplot}\NormalTok{(frenumsell}\OperatorTok{$}\NormalTok{Count, }\DataTypeTok{names.arg =}\NormalTok{ frenumsell}\OperatorTok{$}\NormalTok{No_of_Sells, }\DataTypeTok{ylab=}\StringTok{" Count"}\NormalTok{, }\DataTypeTok{xlab=}\StringTok{"No_of_Sellers"}\NormalTok{, }\DataTypeTok{xlim=}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{30}\NormalTok{),}\DataTypeTok{ylim=}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{500}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{CS_6313.002_Project_1-part_1_files/figure-latex/unnamed-chunk-4-1.pdf}
+\includegraphics{CS_6313.002_Project_1-part_1_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\subsection{\texorpdfstring{Fitting of the distribution `pois' by
+maximum
+likelihood}{Fitting of the distribution pois by maximum likelihood}}\label{fitting-of-the-distribution-pois-by-maximum-likelihood}
+
+\subsection{Parameters:}\label{parameters}
+
+\subsection{p1 = 0.033}\label{p1-0.033}
+
+\subsection{p2 = 0.364}\label{p2-0.364}
+
+\subsection{p3 = 0.603}\label{p3-0.603}
+
+```
+
+
+\end{document}
