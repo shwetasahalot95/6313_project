@@ -1,0 +1,877 @@
+---
+title: "CS 6313.002 Statistical Methods of Data Science - Final Project"
+author: "Shweta Rakesh Sahalot (sxs180145), Siddhi Chechani (sxc170042) "
+date: "December 3, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+The aim of the project is to implement different statistical methods on the TENXPAY Token transaction data.The results of the methods are analyzed to derive inferences about the token data.In 4.1, we found how many times a user buys or sells the TENXPAY token, then fit a distribution and estimate the best distribution.In 4.2, we find the correlation between the TENXPAY Token price data and layer features of the TENXPAY Token.In 4.3, we find the most active buyer and seller of our TENXPAY token and then track them in all other tokens, plot how many unique tokens have they invested in the provided time frame then fit and estimate distributions as part 1. In 4.4, we created  a multiple linear regression model to explain price return on day t. 
+
+**source code**
+
+## Introduction
+
+### 1.1 Key Concepts:
+
+Let us first understand a few concepts, before we get into the detailing of the project
+
+#### 1.1.1 Blockchain:
+It is a public ledger formed of multiple blocks.Each block contains crytographic hash of the previous block, transaction data, timestamp and other metadata.The blockchain is a chain of these blocks linked together cryptographically and stored on a distributed peer-to-peer network.
+
+#### 1.1.2 Ethereum
+
+Ethereum is adecentralized platform that runs smart contracts: applications that run exactly as programmed without any possibility of downtime, censorship, fraud or third-party interference.
+
+These apps run on a custom builtblockchain, an enormously powerful shared global infrastructure that can move value around and represent the ownership of property.
+
+Smart Contract is a set of instructions of the format if-this-then-that, it is formed when someone needs to performing particular task involving one or more than one entities of the blockchain. The contract is a code which executes itself on occurence of a triggering event such as expiration date.The smart contracts can be written with different languages such as solidity 
+
+The EVM is a runtime environment for smart contracts in Ethereum. Every Ethereum node in the network runs an EVM implementation and executes the same instructions.
+
+Ether is the digital currency(cryptocurrency) of Ethereum. Every individual transaction or step in a contract requires some computation. To perform any computation user has to pay a cost calulated in terms of 'Gas' and paid in terms of 'Ether'. The Gas consist of two parts:
+
+Gas limit: It is the amount of units of gas
+Gas price: It is the amount paid per unit of gas
+
+#### 1.1.3 Ethereum ERC-20 Tokens:
+If a user needs some service provided by the DAPPS, then he has to pay for that service in terms of 'token' associated with the DAPPS. These Ethereum tokens can be bought using Ether or other cryptocurrencies and can serve the following two purposes:
+
+1) Usage Token: These tokens are used to pay for the services of the Dapp
+2) Work Token: These tokens identify you as a shareholder in the DAPP
+
+ERC-20 is a technical standard used for smart contracts on the Ethereum Blockchain for implementing tokens. It is a common list of rules for Ethereum token regarding interactions between tokens,transferring tokens between addresses and how data within th e token is accessed
+
+### 1.2.1 Project Primary Token: Tenxpay
+
+When we as the co-founders of TenX got together to start this company, it was our vision to have assets on the blockchain be not only available to industry insiders, but rather 
+something that can be used by any individual user in the "real world".
+
+Additionally, with the emergence of more and more different tokens, a growing number of users
+and businesses truly struggle to leverage on the existing infrastructure to make this interconnectedness of physical and virtual platforms become a reality.
+
+At TenX, we strive to offer the user access to as large as possible a range of blockchain assets at a maximum degree of convenience, while adhering to the highest security standards in the ecosystem
+
+To the end-user, we offer the TenX Card, a debit (and, in time to come, credit) card, with an accompanying TenX Wallet, a mobile wallet that can be funded not only with Bitcoin (BTC),Ether (ETH), and Dash (DASH) as currently possible, but also with virtually any blockchain asset in time to come. TenX payment facilities which include the physical and virtual debit card can be used in almost 200 countries at over 36 million points of acceptance today.
+
+This is possible as we have card issuance partnerships with major credit card companies.
+
+Moreover, users and businesses can exchange their blockchain assets seamlessly from one
+user to another in a decentralized manner, removing any risk that is usually associated with current centralized solutions.
+
+#### 1.2.1.1 Product Advantages:
+1) Multi-asset (any blockchain asset compatible with and accepted by the TenX Wallet)
+2) Assets stay in cryptocurrency
+3) Best available foreign exchange and transaction fees (with no other charges)
+4) Decentralized and trustless storage
+
+### 1.2.2 Tenxpay Token:
+
+TenX connects your blockchain assets for everyday use. TenX's debit card and banking licence will allow us to be a hub for the blockchain ecosystem to connect for real-world use cases.
+
+Details: 12/03/2018
+
+1 PAY = $0.67 USD
+Market Cap = $29,302,619.00 USD  
+Circulating Supply = 109,347,861.00 PAY  
+Total Supply = ($54,993,597.93) 205,218,255.948577763364408207 PAY 
+Subunits =  $10^18$  
+
+## 2. Data Description
+The Data used for the project is divided in two parts:
+
+1) Token network edge files:
+
+There are 40 Token network edge files.Token edge files have 4 columns: from_node, to_node, unix-time, total-amount.For each row it implies that from_node sold total-amount of the token to to_nodeid at time unix-time.
+
+ (a) from_node : Id which sells the token in the transaction  
+ (b) to_node : Id which buys the token in the transaction  
+ (c) unixtime : Unix time of the transaction  
+ (d) totalamount : Total amount of the tenxpay token involved in the transaction
+For Part 1,2 and 4 of the project we will only use the tenxpay token network edge file. For part 3 we will use the token network edge files of all 40 tokens.
+
+2) Token price files:
+Price dataset for ten token it contains 334 rows and 7 columns as follows:  
+ (a) Date  
+ (b) Open : Opening price of the token on that day  
+ (c) High : Max price of the token on that day  
+ (d) Low : Min price of the token on that day  
+ (e) Close : Closing price of the token on that day  
+ (f) Volume : Volume of the token on that day  
+ (g) Market Cap: Market Cap of that token on that day
+ We use price data in part 2 and 4.
+
+## 3. Preprocessing
+
+There could be some records in the transactions where total amount is very large. Some of this records could be due to some bug or glitch(integer overflow problem). These values can be separated from data using a threshold value.
+
+Calculating this value for the tenxpay token:The value of transaction amount can't be greater than the max value where, max value = total supply of tokens * subunits.subsituting the values from above.
+
+
+```{r}
+##Load Token 
+data <- read.delim("networktenxpayTX.txt",header=FALSE,sep=" ")
+tokenFrame<-as.data.frame(data)
+colnames(tokenFrame)<- c(" fromNodeID", "toNodeID", "Time", "Amount")
+
+##	fromNodeID  toNodeID    Time              Amount
+##  560         1452        1524611450        1.728672e+20
+##  2011173     2011174     1524611865        4.556238e+20
+##  75989       1822217     1524612292        5.795000e+20
+##  40002       6382858     1524612655        4.481100e+20
+##  17          2029263     1524612851        4.998000e+21
+##  222770      4848204     1524612957        3.283584e+20
+
+#Claculating Outlier Threshold
+x <- 205218255.948577763364408207
+y <- 10^18
+threshold <- x*y
+
+## Finding Outliers
+Outlierdata <-tokenFrame[which(tokenFrame$Amount> threshold),]
+
+## Total number of Outliers
+message("Total number of outliers: ", length(Outlierdata$tokenAmount))
+
+## Data Without Outliers
+data1 <-tokenFrame[which(tokenFrame$Amount< threshold),]
+View(data1)
+
+## Distribution 
+##	fromNodeID  toNodeID    Time              Amount
+##  560         1452        1524611450        1.728672e+20
+##  2011173     2011174     1524611865        4.556238e+20
+##  75989       1822217     1524612292        5.795000e+20
+##  40002       6382858     1524612655        4.481100e+20
+##  17          2029263     1524612851        4.998000e+21
+##  222770      4848204     1524612957        3.283584e+20
+
+```
+## 4.Token Data Analysis 
+
+### 4.1 Finad and Fit Distribution
+
+**The package we use to fit distribution: ** fitdistrplus, provide the function fitdist() we can use to fit distribution of our data.
+**The function we use to fit distribution: ** fitdist(). Fit of univariate distributions to different type of data with different estimate method we can choose: maximum likelihood estimation (mle), moment matching estimation (mme), quantile matching estimation (qme), maximizing goodness-of-fit estimation (mge), the default and we mostly used one is MLE.
+Output of this function is S3 object, we can use several methods like plot(), print(), summary() to visualize it or get more detailed information.We use plot in this project.
+
+```{r}
+## Table 1: BUyer Transaction and its frequency 
+BuyerData <- (table(data1[2]))
+DataFrequency <- as.data.frame(BuyerData)
+colnames(DataFrequency) <- c("UserID", "frequency")
+View(DataFrequency)
+
+##  UserID      frequency
+##  5           20
+##  8           244
+##  13          2
+##  15          1
+##  17          14
+##  22          7
+##  26          130
+
+
+## Table 2: Frequency of No_of_Transactions
+FreqBuyers= table(DataFrequency$frequency)
+frenumbuy=as.data.frame(FreqBuyers)
+colnames(frenumbuy)<- c("No_of_Trasactions", "Count")
+View(frenumbuy)
+
+##  No_of_Transctions   Count
+##  1                   84884
+##  2                   24985
+##  3                   8990
+##  4                   4375
+##  5                   2376
+##  6                   1482
+##  7                   87
+
+
+## Bar Plot
+barplot(frenumbuy$Count, names.arg = frenumbuy$No_of_Trasactions, ylab=" Count", xlab="No_of_Transactions", xlim=c(0,40),ylim=c(0,500))
+
+```
+```{r}
+
+##Fit Distribution
+library(MASS)
+library(lsei)
+library(npsurv)
+library(survival)
+library(fitdistrplus)
+fit<-fitdist(frenumbuy$Count, "pois", method='mle')
+plot(fit)
+```
+
+```{r fig.cap = "Fitting with Weibull Distribution-Buys"}
+# fit distribution
+# Poisson Distribution
+library(fitdistrplus)
+fit <- fitdist(frenumbuy$Count, "pois", method="mle")
+# Exponential Distribution
+fit1 <- fitdist(frenumbuy$Count, "exp",method = "mme")
+# Normal Distribution
+fit2 <- fitdist(frenumbuy$Count, "norm")
+plot(fit1)
+plot(fit)
+plot(fit2)
+
+## Fitting of the distribution ' pois ' by maximum likelihood 
+## Parameters:
+
+## p1 = 0.033
+## p2 = 0.364
+## p3 = 0.603
+```
+The sells part is similiar to buys part, so we didn't show the code in this report, the follow is the plot of sells:
+```{r}
+# Fit Distribution -- Sells
+##Table 3: Seller Transaction and its frequency
+SellerData <- (table(data1[1]))
+Data2frequency <- as.data.frame(SellerData)
+colnames(Data2frequency) <- c("SellerID", "frequency")
+View(Data2frequency)
+
+##  SellerID        frequency
+##  5               1
+##  8               413
+##  13              83
+##  15              1
+##  17              92081
+##  22              5
+##  26              290
+
+## Table 4: Frequency of No_of_Transactions
+FreqSellers= table(Data2frequency$frequency)
+frenumsell = as.data.frame(FreqSellers)
+colnames(frenumsell) <- c("No_of_Sells", "Count")
+View(frenumsell)
+
+##  No_of_Sells   Count
+##  1             51681
+##  2             11039
+##  3             4213
+##  4             2091
+##  5             1084
+##  6             701
+##  7             453
+
+##Bar Plot
+barplot(frenumsell$Count, names.arg = frenumsell$No_of_Sells, ylab=" Count", xlab="No_of_Sellers", xlim=c(0,30),ylim=c(0,500))
+
+```
+```{r echo=FALSE, fig.cap = "Fitting with Weibull Distribution-Selles"}
+# fit distribution
+# Poisson Distribution
+library(fitdistrplus)
+fitSells <- fitdist(frenumsell$Count, "pois", method="mle")
+# Weibull Distribution
+fitSells1 <- fitdist(frenumsell$Count, "weibull",method = "mle")
+# Exponential Distribution
+fitSells2 <- fitdist(frenumsell$Count, "exp",method = "mme")
+# Normal Distribution
+fitSells3 <- fitdist(frenumsell$Count, "norm")
+plot(fitSells2)
+
+```
+### 4.2 Calulate Correlations of Token Data and Price Data
+
+Loading the token data:
+
+
+```{r}
+tokenData <- read.delim("networktenxpayTX.txt", header = FALSE, sep = " ")
+tokenFrame<- as.data.frame(tokenData)
+colnames(tokenFrame)<-c('fromNode','toNode','unixTime','totalAmount')
+head(tokenFrame)
+```
+
+Removing Outliers from the token data:
+
+
+```{r}
+TotalSupply <-205218255.9
+Decimals <- 10^18
+OutlierValue <- TotalSupply*Decimals
+WithoutOutlierdata <- tokenFrame[ which(tokenFrame$totalAmount < OutlierValue),]
+head(WithoutOutlierdata)
+```
+
+Summary of the token data without outlier:
+
+```{r}
+summary(WithoutOutlierdata$totalAmount)
+```
+
+Max amount of the token data without outlier:
+
+```{r}
+max(WithoutOutlierdata$totalAmount)
+```
+
+First step: Ensure that the tenxpay token data is within the time frame of the Price Data
+
+Following is the date interval of the price data:
+
+Start Date: 06/27/2017
+End Date: 07/14/2018
+
+Lets check the date range for the token data
+
+First convert the Unix time of the token data to Date format
+
+```{r}
+newwithoutoutlierdata <- WithoutOutlierdata
+newwithoutoutlierdata$unixTime <- as.Date(as.POSIXct(WithoutOutlierdata$unixTime,origin="1970-01-01",tz="GMT"))
+class(newwithoutoutlierdata$unixTime)
+```
+
+loading the price data :
+```{r}
+priceData <- read.delim("tenxpay", header = TRUE, sep = "\t")
+head(priceData)
+priceData$Date <- as.Date(priceData$Date, "%m/%d/%Y")
+nrow(priceData)
+```
+add the price return to the dataframe:
+
+```{r}
+priceData$Open[1]
+(priceData$Open[2]-priceData$Open[1])/priceData$Open[1]
+```
+create the price return column:
+```{r}
+return <- numeric(nrow(priceData))
+return[379] <- priceData$Open[379]
+for (i in 378:1) {
+  return[i] <- (priceData$Open[i]-priceData$Open[i+1])/priceData$Open[i+1]
+}
+return[2]
+return
+```
+adding the price return column to the pricedata dataframe
+```{r}
+priceData$return <- return
+priceData$return[378]
+head(newwithoutoutlierdata$Date)
+colnames(newwithoutoutlierdata)<-c('fromNode','toNode','Date','totalAmount')
+newwithoutoutlierdata$Date[4]
+class(priceData$Date)
+```
+merge both the dataframes according to dates
+```{r}
+newdataset <- merge(newwithoutoutlierdata,priceData,by = "Date")
+head(newdataset$Date)
+```
+
+
+Creating  a feature of no of transactions from the data for doing simple linear regression.
+
+```{r}
+frequencytrans <- table(newdataset$Date)
+freqtrans<- as.data.frame(frequencytrans)
+summary(freqtrans)
+colnames(freqtrans) <- c("Date","no_of_trans")
+freqtrans$Date <- as.Date(freqtrans$Date)
+```
+mergeing 
+ freq trans with newdataset
+ 
+```{r}
+newsimpletable <- merge(priceData,freqtrans,by = "Date")
+head(newsimpletable$return)
+newsimpletable<- newsimpletable[,c(-2:-7)]
+head(newsimpletable$no_of_trans)
+```
+Data Preparation:
+
+```{r}
+summary(newsimpletable)
+hist(newsimpletable$no_of_trans)
+hist(newsimpletable$return)
+```
+
+Analysis:
+
+```{r}
+par(mfrow = c(1,1))
+bx = boxplot(newsimpletable$no_of_trans,ylim = c(0,5000))
+```
+checking the distribution of no of transactions:
+
+```{r}
+quantile(newsimpletable$no_of_trans, seq(0,1,0.02))
+```
+boxplot stats:
+```{r}
+bx$stats
+```
+```{r}
+summary(newsimpletable$no_of_trans)
+```
+capping at 96%
+
+```{r}
+newsimpletable$no_of_trans<-ifelse(newsimpletable$no_of_trans>2000,1500,newsimpletable$no_of_trans)
+boxplot(newsimpletable$no_of_trans)
+```
+checking the response variable:
+
+```{r}
+boxplot(newsimpletable$return)
+```
+bivariate analysis:
+
+```{r}
+plot(newsimpletable$no_of_trans,newsimpletable$return)
+```
+
+lets check the correlation:
+
+```{r}
+cor(newsimpletable[,c(2,3)])
+```
+
+fitting the linear model:
+
+```{r}
+library(fmsb)
+final_data <- lm(return~no_of_trans,data=newsimpletable)
+VIF(final_data)
+summary(final_data)
+library(lmtest)
+par(mfrow = c(2,2))
+plot(final_data)
+```
+ now trying by taking the sqaureroot of the predictor variable:
+ 
+ 
+```{r}
+newsimpletable$no_of_trans <- (newsimpletable$no_of_trans)^(0.5)
+final_data <- lm(return~no_of_trans,data=newsimpletable)
+VIF(final_data)
+summary(final_data)
+```
+creating 2 new features no of tokens and no of buys:
+
+so first dividing the total amount of the dataset with 10^8 to find the no of tokens and then grouping it and adding it acording to the date
+```{r}
+newdataset$totalAmount <- (newdataset$totalAmount/(10^8))
+tokentable <- aggregate(newdataset$totalAmount, by = list(Category = newdataset$Date), FUN = sum)
+head(tokentable)
+colnames(tokentable)<- c("Date","total_token")
+newsimpletable <- merge(newsimpletable,tokentable,by = "Date")
+class(newdataset$Date)
+buyerstable <- aggregate(data=newdataset, toNode ~ Date, function(x) length(unique(x)))
+head(buyerstable)
+summary(buyerstable)
+colnames(buyerstable) <- c("Date","unique_buyers")
+newsimpletable  <- merge(newsimpletable,buyerstable,by = "Date")
+```
+
+time for data preparation:
+
+```{r}
+summary(newsimpletable)
+```
+
+then lets do univariate analysis on all independent variables
+
+```{r}
+par(mfrow=c(1,2))
+bx = boxplot(newsimpletable$no_of_trans)
+```
+capping the outliers:
+
+```{r}
+# quantile(newsimpletable$no_of_trans, seq(0,1,0.02))
+# newsimpletable$no_of_trans<-ifelse(newsimpletable$no_of_trans>60,59,newsimpletable$no_of_trans)
+# boxplot(newsimpletable$no_of_trans)
+```
+checking unique buyers:
+```{r}
+par(mfrow=c(1,2))
+bx = boxplot(newsimpletable$unique_buyers)
+quantile(newsimpletable$unique_buyers, seq(0,1,0.02))
+newsimpletable$unique_buyers<-ifelse(newsimpletable$unique_buyers>3087,3088,newsimpletable$unique_buyers)
+boxplot(newsimpletable$unique_buyers)
+```
+
+checking for no of tokens:
+
+```{r}
+par(mfrow=c(1,2))
+bx = boxplot(newsimpletable$total_token)
+quantile(newsimpletable$total_token, seq(0,1,0.02))
+newsimpletable$total_token<-ifelse(newsimpletable$total_token>5791001,5791001,newsimpletable$total_token)
+boxplot(newsimpletable$total_token)
+```
+
+lets check the response variable:
+
+```{r}
+hist(newsimpletable$return)
+par(mfrow=c(1,2))
+bx = boxplot(newsimpletable$return)
+```
+bivariate analysis:
+
+square root number of transactions vs return:
+
+```{r}
+plot(newsimpletable$no_of_trans,newsimpletable$return)
+```
+
+lets check for total token vs return:
+
+```{r}
+plot(newsimpletable$total_token,newsimpletable$return)
+```
+
+lets check unique buyers vs return:
+
+```{r}
+plot(newsimpletable$unique_buyers,newsimpletable$return)
+```
+lets check the correlation:
+
+```{r}
+cor(newsimpletable[,c(2:5)])
+```
+
+lets extract one more feature
+
+no of investors who have bought more than ten token:
+
+```{r}
+library(dplyr)
+summary(newdataset)
+```
+
+we will first need to find the total number of investors per day and then find the  total tokens  bought by each investor per day. then we have to find the number pf investors who bought more than 10 token that day.
+
+
+```{r}
+investortable <- newdataset %>% group_by(Date)
+totalinvestor_table<- summarize(investortable , total_investors = n_distinct(toNode))
+head(totalinvestor_table)
+newinvestortable <- newdataset %>% group_by(Date,toNode)
+newinvestortable_totaltoken <- summarise(newinvestortable,total_token = sum(totalAmount))
+summary(newinvestortable_totaltoken)
+subsetnewinvestortable_totaltoken <- newinvestortable_totaltoken[ which(newinvestortable_totaltoken$total_token>100), ]
+finalinvestortable <- summarise(subsetnewinvestortable_totaltoken, final_investors = n_distinct(toNode))
+newfinalinvestortable <- merge(totalinvestor_table,finalinvestortable,by = "Date")
+newfinalinvestortable$percentage_investors <- (newfinalinvestortable$final_investors/newfinalinvestortable$total_investors)*100
+newsimpletable <- merge(newsimpletable,newfinalinvestortable,by = "Date")
+```
+writiting the previous day fix :
+
+```{r}
+head(newsimpletable$Date)
+tail(newsimpletable$return)
+shift <- function(x, n){
+  c(x[-(seq(n))], rep(NA, n))
+}
+newsimpletable$return <- shift(newsimpletable$return, 1)
+newsimpletable <- newsimpletable[1:(nrow(newsimpletable)-1),]
+```
+```
+
+### 4.4 Create Linear Regression Model
+In this part we created a multiple linear regression model on the price data and our primary token data.Our response variable(y) is simple price return given by $p_{t} -p_{t-1} / p_{t-1}$ where, $p_{t}$ is the token price in dollar for $t_{th}$ day.
+The regressor variables(x1...xn) are as follows:
+1)No of token transactions per day
+2)No of total token bought or sold per day
+3)No of unique buyers per day
+4)Percentage of investors who bought more than token per day.
+```{r echo=FALSE}
+tokenData <- read.delim("networktenxpayTX.txt", header = FALSE, sep = " ")
+tokenFrame<- as.data.frame(tokenData)
+colnames(tokenFrame)<-c('fromNode','toNode','unixTime','totalAmount')
+priceData <- read.delim("tenxpay", header = TRUE, sep = "\t")
+TotalSupply <-205218255.9
+Decimals <- 10^18
+OutlierValue <- TotalSupply*Decimals
+WithoutOutlierdata <- tokenFrame[ which(tokenFrame$totalAmount < OutlierValue),]
+newwithoutoutlierdata <- WithoutOutlierdata
+newwithoutoutlierdata$unixTime <- as.Date(as.POSIXct(WithoutOutlierdata$unixTime,origin="1970-01-01",tz="GMT"))
+priceData$Date <- as.Date(priceData$Date, "%m/%d/%Y")
+```
+Calculate response variable from the price data using open price. The first few records of the response variable as follows:
+```{r}
+return <- numeric(nrow(priceData))
+return[379] <- priceData$Open[379]
+for (i in 378:1) {
+  return[i] <- (priceData$Open[i]-priceData$Open[i+1])/priceData$Open[i+1]
+}
+priceData$return <- return
+head(priceData$return)
+```
+Merge both the datasets according to date which would help us in calculating the regressor variables.
+```{r}
+colnames(newwithoutoutlierdata)<-c('fromNode','toNode','Date','totalAmount')
+newdataset <- merge(newwithoutoutlierdata,priceData,by = "Date")
+```
+```{r echo = FALSE,eval = FALSE}
+#token data dates
+summary(newwithoutoutlierdata$Date)
+#price data dates
+summary(priceData$Date)
+#dates after merging
+summary(newdataset$Date)
+```
+#### 4.4.1 Model 1:Simple Linear Regression
+```{r echo=FALSE}
+# Feature Engineering
+frequencytrans <- table(newdataset$Date)
+freqtrans<- as.data.frame(frequencytrans)
+colnames(freqtrans) <- c("Date","no_of_trans")
+freqtrans$Date <- as.Date(freqtrans$Date)
+head(freqtrans$no_of_trans)
+```
+```{r echo = FALSE}
+newsimpletable <- merge(priceData,freqtrans,by = "Date")
+newsimpletable<- newsimpletable[,c(-6:-7)]
+```
+Data preparation: univariate and bivariate analysis.
+**Univariate Analysis**:
+
+Check for outliers and then remove them by capping our data to the max value.To remove majority of the outlier we are capping the data 92% quantile. Then we will alsocheck the response variable. 
+
+```{r echo =FALSE, fig.cap = "Boxplots of variables for Univariate analysis in simple regression"}
+par(mfrow = c(1,3))
+bx = boxplot(newsimpletable$no_of_trans,ylim = c(0,5000),main = "with outlier",ylab ="no of trans" )
+newsimpletable$no_of_trans<-ifelse(newsimpletable$no_of_trans>2275,2274.36,newsimpletable$no_of_trans)
+boxplot(newsimpletable$no_of_trans, main ="without outlier",ylab = "no of trans")
+#quantile(newsimpletable$no_of_trans, seq(0,1,0.02))
+#bx$stats
+boxplot(newsimpletable$return, main = "with outliers",ylab ="simple return")
+```
+
+But for simple return response varaible case we won't be removing any outliers as we don't want to have any impact on the response variable.
+
+**Bivariate Analysis**:
+Draw the scatterplot between the regressor and the response variable.Before we do that it is important to shift our response variable up by one row because we will be using yesterday to model today's response.
+
+```{r }
+shift <- function(x, n){
+  c(x[-(seq(n))], rep(NA, n))
+}
+newsimpletable$return <- shift(newsimpletable$return, 1)
+newsimpletable <- newsimpletable[1:(nrow(newsimpletable)-1),]
+head(newsimpletable$return)
+#plot(newsimpletable$no_of_trans,newsimpletable$return)
+```
+
+We can see that there isn't much relation between no of transactions each day and the simple return variable. We can confirm this by finding the correlation between the two
+
+```{r}
+cor(newsimpletable[,c(6,7)])
+```
+After completing the analysis we move ahead to fit the linear model.
+
+```{r}
+final_data <- lm(return~no_of_trans,data=newsimpletable)
+summary(final_data)
+```
+
+From the summary of the linear model we can clearly see that it is not a good model, the p-values of the intercept and the regressor are very high, also the r-square conveys only 2% of the response variable.
+
+**Testing**  
+
+We can test this linear model using the plot function:
+
+```{r echo=FALSE ,warning=FALSE, error=FALSE, message=FALSE,fig.cap = "Residual Plot of the linear model"}
+library(lmtest)
+par(mfrow = c(2,2))
+plot(final_data)
+```
+
+1. **Residuals vs fitted**:
+
+Even though we see a horizontal line in this plot we can see that the residuals are not evenly spread across the line.It may not suggest a pattern but we can see most of the points in the left speculating a non-linear behaviour
+
+2. **Normal Q-Q**:
+
+The plot leads us to believe that the residuals follow normality as most of the points are seen to lie on the line or near it although few observations such as 42,2 and 156 are significantly away from the line.
+
+3. **Scale-Location**:
+
+The horizontal line in this plot suggests that homoscedasticity is observed in the residuals.
+
+4. **Residuals vs leverage**:
+
+This plots finds the observations which have a high influence on the regression model according to the cooks distance. We can see that observation 42 is out of the region thus is an outlier which could have an impact on the model if we do remove or decide to keep it in the model.
+
+#### 4.4.2 Model 2:Multiple Linear Regression
+
+Create three new features for our multiple regression model: 
+
+1. Total number of tokens involved per day:
+
+First divide the total amount of each transaction with number of sub units of the tenxpay token(10^8) to get the number of tokens, then we will group by and sum each amount according to the date  
+
+First few records are as follows
+```{r echo = FALSE}
+newdataset$totalAmount <- (newdataset$totalAmount/(10^8))
+tokentable <- aggregate(newdataset$totalAmount, by = list(Category = newdataset$Date), FUN = sum)
+colnames(tokentable)<- c("Date","total_token")
+newsimpletable <- merge(newsimpletable,tokentable,by = "Date")
+head(newsimpletable$total_token)
+```
+
+2. Number of Unique buyers per day: 
+
+Group the dataset according to the date and then count the number of unique buyers for each day.  
+
+First few records are as follows:
+
+```{r echo = FALSE}
+buyerstable <- aggregate(data=newdataset, toNode ~ Date, function(x) length(unique(x)))
+colnames(buyerstable) <- c("Date","unique_buyers")
+newsimpletable  <- merge(newsimpletable,buyerstable,by = "Date")
+head(newsimpletable$unique_buyers)
+```
+
+3. Percentage of investors who have bought more than 10 tokens:
+
+Find the total number of investors per day and then find the total tokens bought by each investor per day. Then find the number of investors who bought more than 10 token that day.  
+
+First few records are as follows:
+
+```{r echo =FALSE ,message=FALSE ,error=FALSE}
+library(dplyr)
+investortable <- newdataset %>% group_by(Date)
+totalinvestor_table<- summarize(investortable , total_investors = n_distinct(toNode))
+newinvestortable <- newdataset %>% group_by(Date,toNode)
+newinvestortable_totaltoken <- summarise(newinvestortable,total_token = sum(totalAmount))
+subsetnewinvestortable_totaltoken <- newinvestortable_totaltoken[ which(newinvestortable_totaltoken$total_token>10), ]
+finalinvestortable <- summarise(subsetnewinvestortable_totaltoken, final_investors = n_distinct(toNode))
+newfinalinvestortable <- merge(totalinvestor_table,finalinvestortable,by = "Date")
+newfinalinvestortable$percentage_investors <- (newfinalinvestortable$final_investors/newfinalinvestortable$total_investors)*100
+newsimpletable <- merge(newsimpletable,newfinalinvestortable,by = "Date")
+head(newsimpletable$percentage_investors)
+```
+
+Now that we have all the required features lets do the analysis as we did for the simple linear regression:
+
+**Univariate analysis**:
+
+Create a boxplot of unique buys regressor variable and then we check for the number of tokens(and capping at 94%) and percentage of investors variable:
+
+```{r echo = FALSE,fig.cap = "Boxplot if variables for univariate analysis in multiple regression"}
+par(mfrow=c(2,3))
+bx = boxplot(newsimpletable$unique_buyers, main ="with outlier",ylab ="no of buyers")
+#quantile(newsimpletable$unique_buyers, seq(0,1,0.02))
+newsimpletable$unique_buyers<-ifelse(newsimpletable$unique_buyers>3087,3088,newsimpletable$unique_buyers)
+boxplot(newsimpletable$unique_buyers,main ="without outliers",ylab = "no of buyers")
+bx = boxplot(newsimpletable$total_token, main="with outlier", ylab ="no of tokens")
+#quantile(newsimpletable$total_token, seq(0,1,0.02))
+newsimpletable$total_token<-ifelse(newsimpletable$total_token>5791001,5791001,newsimpletable$total_token)
+boxplot(newsimpletable$total_token, main="without outliers", ylab="no of tokens")
+bx = boxplot(newsimpletable$percentage_investors, main="with outliers", ylab ="% of investors")
+#quantile(newsimpletable$percentage_investors, seq(0,1,0.02))
+newsimpletable$percentage_investors<-ifelse(newsimpletable$percentage_investors<60,61.2,newsimpletable$percentage_investors)
+boxplot(newsimpletable$percentage_investors,main="without outliers", ylab="% of investors")
+```
+
+
+ After the univariate analysis lets do the **bivariate analysis**:
+ 
+ plot number of transactions vs return:  
+ plot total token vs return:  
+ plot unique buyers vs return:  
+ plot percentage investors vs return:  
+ 
+```{r echo=FALSE, fig.cap = "Scatter plot of variables for Bivariate analysis in multiple regression"}
+par(mfrow=c(2,2))
+plot(newsimpletable$total_token,newsimpletable$return,xlab ="no of tokens",ylab ="simple return")
+plot(newsimpletable$no_of_trans,newsimpletable$return,xlab ="no of trans",ylab ="simple return")
+plot(newsimpletable$unique_buyers,newsimpletable$return,xlab ="no of buyers",ylab ="simple return")
+plot(newsimpletable$percentage_investors,newsimpletable$return,xlab ="percentage of buyers",ylab ="simple return")
+```
+ 
+After analysing lets create an initial multiple regression linear model, Use the car library to calculate variable inflation factor and find the multicollinearity.
+```{r error=FALSE ,message=FALSE}
+final_data3 <- lm(return~no_of_trans+total_token+unique_buyers+percentage_investors,data = newsimpletable)
+library(car)
+```
+
+Since the VIF for all the regressor variables is not much higher than 5 we will keep all of them in the initial model
+
+```{r}
+summary(final_data3)
+```
+
+From the summary, p-value for the variables is very high suggesting that there is no linear relation between the regressor variable and the response variables.But before giving up on this we haven't yet used any features from the price data lets use the inherent features such as open, low, high etc to create a new linear model and see how we fare:
+
+First find the multicollinearity and then use the step function to find the right combination of features:  
+
+```{r echo=FALSE ,error =FALSE,message=FALSE,eval=TRUE}
+final_data6 <- lm(return~no_of_trans+total_token+unique_buyers+percentage_investors+Open+High+Low,data = newsimpletable)
+library(car)
+```
+
+Finally, Check the summary and plot of our final data model:
+```{r echo=FALSE,fig.cap = "Residual plot of the linear model for multiple regression"}
+#anothernewsimpletable <- merge(priceData,freqtrans,by = "Date")
+#summary(anothernewsimpletable)
+#anothernewsimpletable<- anothernewsimpletable[,c(-6,-7)]
+#shift <- function(x, n){
+ # c(x[-(seq(n))], rep(NA, n))
+#}
+#anothernewsimpletable$return <- shift(anothernewsimpletable$return, 1)
+#anothernewsimpletable <- anothernewsimpletable[1:(nrow(anothernewsimpletable)-1),]
+#plot(anothernewsimpletable$no_of_trans,anothernewsimpletable$return)
+#anothernewsimpletable <- merge(anothernewsimpletable,tokentable,by = "Date")
+#anothernewsimpletable  <- merge(anothernewsimpletable,buyerstable,by = "Date")
+#anothernewsimpletable <- merge(anothernewsimpletable,newfinalinvestortable,by = "Date")
+#summary(anothernewsimpletable)
+#cor(anothernewsimpletable[,c(2:12)])
+#summary(final_data6)
+final_data10 <- lm(return~total_token+Open+High+Low,data = newsimpletable)
+#summary(final_data10)
+#final_data8 <- lm(return~no_of_trans+total_token+unique_buyers+percentage_investors+High+Low,data = newsimpletable)
+#summary(final_data8)
+#vif(final_data8)
+#final_data9 <- lm(return~no_of_trans+total_token+unique_buyers+percentage_investors+High,data = newsimpletable)
+#vif(final_data9)
+#summary(final_data9)
+#final_data10 <- lm(return~total_token+Open+High+Low,data = newsimpletable)
+summary(final_data10)
+par(mfrow=c(2,2))
+plot(final_data10)
+```
+
+
+
+## 5.Conclusion
+
+### 5.1 Q1
+We totally tried 5 distributions while fiting distributions with our data: Poisson Distribution, Weibull Distribution, Exponential Distribution, Geometric Distribution and Normal Distribution. After compare with parameters and graphs of different distributions, we can find:
+The distribution of buyers and sellers are similiar.
+The estimate parameters of Normal Distribution are very close to the parameters of our token data, but the graphs don't fit well. 
+The graphs of Poisson Distribution and Exponential Distribution both fit our token data well, but for the parameters,we should not use Poisson Distribution.
+
+Hence, we finally conclude that **Exponential Distribution** fit our distribution best.
+
+### 5.2 Q2
+The number of layers is 15. We tried several features of token data : 
+(1) number of transactions(best correlation is 0.193) 
+(2)Number of Unique buyers per day(best correlation is 0.14943) 
+(3)Percentage of investors who have bought more than 10 tokens(best correlation is 0.1347)
+
+Hence, the best correlation is 0.4943, when feature of token data is number of unique buyers per day.
+
+
+### 5.4 Q4
+When we use the price data columns and remove the features which have high p-value, we get $R^2$ value of **71%**. 
+We have analysed how we can use simple and multiple linear regression to create linear models by doing feature extraction on the tenxpay token and price data.
+The model can be redeveloped and tested with different features to improve the R-squared value however the method of creation and analysis is mostly similar.
+
