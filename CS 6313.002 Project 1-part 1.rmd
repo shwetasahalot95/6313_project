@@ -1,0 +1,266 @@
+---
+title: "CS6313.002 Project 1-part 1"
+author: "Shweta Rakesh Sahalot(sxs180145), Siddhi Chechani (sxc170042)"
+date: "December 3, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Abstract
+
+The aim of the project is to implement different statistical methods on the TENXPAY Token transaction data.The results of the methods are analyzed to derive inferences about the token data.In 4.1, we found how many times a user buys or sells the TENXPAY token, then fit a distribution and estimate the best distribution.In 4.2, we find the correlation between the TENXPAY Token price data and layer features of the TENXPAY Token.In 4.3, we find the most active buyer and seller of our TENXPAY token and then track them in all other tokens, plot how many unique tokens have they invested in the provided time frame then fit and estimate distributions as part 1. In 4.4, we created  a multiple linear regression model to explain price return on day t. 
+
+## Introduction
+
+### 1.1 Key Concepts:
+
+Let us first understand a few concepts, before we get into the detailing of the project
+
+#### 1.1.1 Blockchain:
+It is a public ledger formed of multiple blocks.Each block contains crytographic hash of the previous block, transaction data, timestamp and other metadata.The blockchain is a chain of these blocks linked together cryptographically and stored on a distributed peer-to-peer network.
+
+#### 1.1.2 Ethereum
+
+Ethereum is adecentralized platform that runs smart contracts: applications that run exactly as programmed without any possibility of downtime, censorship, fraud or third-party interference.
+
+These apps run on a custom builtblockchain, an enormously powerful shared global infrastructure that can move value around and represent the ownership of property.
+
+Smart Contract is a set of instructions of the format if-this-then-that, it is formed when someone needs to performing particular task involving one or more than one entities of the blockchain. The contract is a code which executes itself on occurence of a triggering event such as expiration date.The smart contracts can be written with different languages such as solidity 
+
+The EVM is a runtime environment for smart contracts in Ethereum. Every Ethereum node in the network runs an EVM implementation and executes the same instructions.
+
+Ether is the digital currency(cryptocurrency) of Ethereum. Every individual transaction or step in a contract requires some computation. To perform any computation user has to pay a cost calulated in terms of 'Gas' and paid in terms of 'Ether'. The Gas consist of two parts:
+
+Gas limit: It is the amount of units of gas
+Gas price: It is the amount paid per unit of gas
+
+#### 1.1.3 Ethereum ERC-20 Tokens:
+If a user needs some service provided by the DAPPS, then he has to pay for that service in terms of 'token' associated with the DAPPS. These Ethereum tokens can be bought using Ether or other cryptocurrencies and can serve the following two purposes:
+
+1) Usage Token: These tokens are used to pay for the services of the Dapp
+2) Work Token: These tokens identify you as a shareholder in the DAPP
+
+ERC-20 is a technical standard used for smart contracts on the Ethereum Blockchain for implementing tokens. It is a common list of rules for Ethereum token regarding interactions between tokens,transferring tokens between addresses and how data within th e token is accessed
+
+### 1.2.1 Project Primary Token: Tenxpay
+
+When we as the co-founders of TenX got together to start this company, it was our vision to have assets on the blockchain be not only available to industry insiders, but rather 
+something that can be used by any individual user in the "real world".
+
+Additionally, with the emergence of more and more different tokens, a growing number of users
+and businesses truly struggle to leverage on the existing infrastructure to make this interconnectedness of physical and virtual platforms become a reality.
+
+At TenX, we strive to offer the user access to as large as possible a range of blockchain assets at a maximum degree of convenience, while adhering to the highest security standards in the ecosystem
+
+To the end-user, we offer the TenX Card, a debit (and, in time to come, credit) card, with an accompanying TenX Wallet, a mobile wallet that can be funded not only with Bitcoin (BTC),Ether (ETH), and Dash (DASH) as currently possible, but also with virtually any blockchain asset in time to come. TenX payment facilities which include the physical and virtual debit card can be used in almost 200 countries at over 36 million points of acceptance today.
+
+This is possible as we have card issuance partnerships with major credit card companies.
+
+Moreover, users and businesses can exchange their blockchain assets seamlessly from one
+user to another in a decentralized manner, removing any risk that is usually associated with current centralized solutions.
+
+#### 1.2.1.1 Product Advantages:
+1) Multi-asset (any blockchain asset compatible with and accepted by the TenX Wallet)
+2) Assets stay in cryptocurrency
+3) Best available foreign exchange and transaction fees (with no other charges)
+4) Decentralized and trustless storage
+
+### 1.2.2 Tenxpay Token:
+
+TenX connects your blockchain assets for everyday use. TenX's debit card and banking licence will allow us to be a hub for the blockchain ecosystem to connect for real-world use cases.
+
+Details: 12/03/2018
+
+1 PAY = $0.67 USD
+Market Cap = $29,302,619.00 USD  
+Circulating Supply = 109,347,861.00 PAY  
+Total Supply = ($54,993,597.93) 205,218,255.948577763364408207 PAY 
+Subunits =  $10^18$  
+
+## 2. Data Description
+The Data used for the project is divided in two parts:
+
+1) Token network edge files:
+
+There are 40 Token network edge files.Token edge files have 4 columns: from_node, to_node, unix-time, total-amount.For each row it implies that from_node sold total-amount of the token to to_nodeid at time unix-time.
+
+ (a) from_node : Id which sells the token in the transaction  
+ (b) to_node : Id which buys the token in the transaction  
+ (c) unixtime : Unix time of the transaction  
+ (d) totalamount : Total amount of the storj token involved in the transaction
+For Part 1,2 and 4 of the project we will only use the STORJ token network edge file. For part 3 we will use the token network edge files of all 40 tokens.
+
+2) Token price files:
+Price dataset for ten token it contains 334 rows and 7 columns as follows:  
+ (a) Date  
+ (b) Open : Opening price of the token on that day  
+ (c) High : Max price of the token on that day  
+ (d) Low : Min price of the token on that day  
+ (e) Close : Closing price of the token on that day  
+ (f) Volume : Volume of the token on that day  
+ (g) Market Cap: Market Cap of that token on that day
+ We use price data in part 2 and 4.
+
+## 3. Preprocessing
+
+There could be some records in the transactions where total amount is very large. Some of this records could be due to some bug or glitch(integer overflow problem). These values can be separated from data using a threshold value.
+
+Calculating this value for the STORJ token:The value of transaction amount can't be greater than the max value where, max value = total supply of tokens * subunits.subsituting the values from above.
+
+```{r}
+##Load Token 
+data <- read.delim("networktenxpayTX.txt",header=FALSE,sep=" ")
+tokenFrame<-as.data.frame(data)
+colnames(tokenFrame)<- c(" fromNodeID", "toNodeID", "Time", "Amount")
+
+##	fromNodeID  toNodeID    Time              Amount
+##  560         1452        1524611450        1.728672e+20
+##  2011173     2011174     1524611865        4.556238e+20
+##  75989       1822217     1524612292        5.795000e+20
+##  40002       6382858     1524612655        4.481100e+20
+##  17          2029263     1524612851        4.998000e+21
+##  222770      4848204     1524612957        3.283584e+20
+
+#Claculating Outlier Threshold
+x <- 205218255.948577763364408207
+y <- 10^18
+threshold <- x*y
+
+## Finding Outliers
+Outlierdata <-tokenFrame[which(tokenFrame$Amount> threshold),]
+
+## Total number of Outliers
+message("Total number of outliers: ", length(Outlierdata$tokenAmount))
+
+## Data Without Outliers
+data1 <-tokenFrame[which(tokenFrame$Amount< threshold),]
+View(data1)
+
+## Distribution 
+##	fromNodeID  toNodeID    Time              Amount
+##  560         1452        1524611450        1.728672e+20
+##  2011173     2011174     1524611865        4.556238e+20
+##  75989       1822217     1524612292        5.795000e+20
+##  40002       6382858     1524612655        4.481100e+20
+##  17          2029263     1524612851        4.998000e+21
+##  222770      4848204     1524612957        3.283584e+20
+
+```
+## 4.Token Data Analysis 
+
+### 4.1 Finad and Fit Distribution
+
+**The package we use to fit distribution: ** fitdistrplus, provide the function fitdist() we can use to fit distribution of our data.
+**The function we use to fit distribution: ** fitdist(). Fit of univariate distributions to different type of data with different estimate method we can choose: maximum likelihood estimation (mle), moment matching estimation (mme), quantile matching estimation (qme), maximizing goodness-of-fit estimation (mge), the default and we mostly used one is MLE.
+Output of this function is S3 object, we can use several methods like plot(), print(), summary() to visualize it or get more detailed information.We use plot in this project.
+```{r}
+## Table 1: BUyer Transaction and its frequency 
+BuyerData <- (table(data1[2]))
+DataFrequency <- as.data.frame(BuyerData)
+colnames(DataFrequency) <- c("UserID", "frequency")
+View(DataFrequency)
+
+##  UserID      frequency
+##  5           20
+##  8           244
+##  13          2
+##  15          1
+##  17          14
+##  22          7
+##  26          130
+
+
+## Table 2: Frequency of No_of_Transactions
+FreqBuyers= table(DataFrequency$frequency)
+frenumbuy=as.data.frame(FreqBuyers)
+colnames(frenumbuy)<- c("No_of_Trasactions", "Count")
+View(frenumbuy)
+
+##  No_of_Transctions   Count
+##  1                   84884
+##  2                   24985
+##  3                   8990
+##  4                   4375
+##  5                   2376
+##  6                   1482
+##  7                   87
+
+
+## Bar Plot
+barplot(frenumbuy$Count, names.arg = frenumbuy$No_of_Trasactions, ylab=" Count", xlab="No_of_Transactions", xlim=c(0,40),ylim=c(0,500))
+
+```
+```{r}
+# fit distribution
+library(fitdistrplus)
+# Poisson Distribution
+fit <- fitdist(frenumbuy$Count, "pois", method="mle")
+# Exponential Distribution
+fit1 <- fitdist(frenumbuy$Count, "exp",method = "mme")
+# Normal Distribution
+fit2 <- fitdist(frenumbuy$Count, "norm")
+plot(fit1)
+plot(fit)
+plot(fit2)
+```
+The sells part is similiar to buys part, so we didn't show the code in this report, the follow is the plot of sells:
+```{r}
+# Fit Distribution -- Sells
+##Table 3: Seller Transaction and its frequency
+SellerData <- (table(data1[1]))
+Data2frequency <- as.data.frame(SellerData)
+colnames(Data2frequency) <- c("SellerID", "frequency")
+View(Data2frequency)
+
+##  SellerID        frequency
+##  5               1
+##  8               413
+##  13              83
+##  15              1
+##  17              92081
+##  22              5
+##  26              290
+
+## Table 4: Frequency of No_of_Transactions
+FreqSellers= table(Data2frequency$frequency)
+frenumsell = as.data.frame(FreqSellers)
+colnames(frenumsell) <- c("No_of_Sells", "Count")
+View(frenumsell)
+
+##  No_of_Sells   Count
+##  1             51681
+##  2             11039
+##  3             4213
+##  4             2091
+##  5             1084
+##  6             701
+##  7             453
+
+##Bar Plot
+barplot(frenumsell$Count, names.arg = frenumsell$No_of_Sells, ylab=" Count", xlab="No_of_Sellers", xlim=c(0,30),ylim=c(0,500))
+
+```
+```{r echo=FALSE, fig.cap = "Fitting with Weibull Distribution-Selles"}
+# fit distribution
+# Poisson Distribution
+library(fitdistrplus)
+fitSells <- fitdist(frenumsell$Count, "pois", method="mle")
+# Weibull Distribution
+fitSells1 <- fitdist(frenumsell$Count, "weibull",method = "mle")
+# Exponential Distribution
+fitSells2 <- fitdist(frenumsell$Count, "exp",method = "mme")
+# Normal Distribution
+fitSells3 <- fitdist(frenumsell$Count, "norm")
+plot(fitSells2)
+
+```
+
+## Fitting of the distribution ' pois ' by maximum likelihood 
+## Parameters:
+
+## p1 = 0.033
+## p2 = 0.364
+## p3 = 0.603
+```
