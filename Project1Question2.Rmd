@@ -1,0 +1,317 @@
+---
+title: "CS6313.002 Statistical Project 1-part 2"
+author: Shweta Rakesh Sahalot (sxs180145), Siddhi Chechani (sxc170042)
+date: "October 24, 2018"
+output: html_document
+---
+## Alternate method
+
+Loading the token data:
+
+
+```{r}
+tokenData <- read.delim("networktenxpayTX.txt", header = FALSE, sep = " ")
+tokenFrame<- as.data.frame(tokenData)
+colnames(tokenFrame)<-c('fromNode','toNode','unixTime','totalAmount')
+head(tokenFrame)
+```
+
+Removing Outliers from the token data:
+
+
+```{r}
+TotalSupply <-205218255.9
+Decimals <- 10^18
+OutlierValue <- TotalSupply*Decimals
+WithoutOutlierdata <- tokenFrame[ which(tokenFrame$totalAmount < OutlierValue),]
+head(WithoutOutlierdata)
+```
+
+Summary of the token data without outlier:
+
+```{r}
+summary(WithoutOutlierdata$totalAmount)
+```
+
+Max amount of the token data without outlier:
+
+```{r}
+max(WithoutOutlierdata$totalAmount)
+```
+
+First step: Ensure that the Storj token data is within the time frame of the Price Data
+
+Following is the date interval of the price data:
+
+Start Date: 06/27/2017
+End Date: 07/14/2018
+
+Lets check the date range for the token data
+
+First convert the Unix time of the token data to Date format
+
+```{r}
+newwithoutoutlierdata <- WithoutOutlierdata
+newwithoutoutlierdata$unixTime <- as.Date(as.POSIXct(WithoutOutlierdata$unixTime,origin="1970-01-01",tz="GMT"))
+class(newwithoutoutlierdata$unixTime)
+```
+
+loading the price data :
+```{r}
+priceData <- read.delim("tenxpay", header = TRUE, sep = "\t")
+head(priceData)
+priceData$Date <- as.Date(priceData$Date, "%m/%d/%Y")
+nrow(priceData)
+```
+add the price return to the dataframe:
+
+```{r}
+priceData$Open[1]
+(priceData$Open[2]-priceData$Open[1])/priceData$Open[1]
+```
+create the price return column:
+```{r}
+return <- numeric(nrow(priceData))
+return[379] <- priceData$Open[379]
+for (i in 378:1) {
+  return[i] <- (priceData$Open[i]-priceData$Open[i+1])/priceData$Open[i+1]
+}
+return[2]
+return
+```
+adding the price return column to the pricedata dataframe
+```{r}
+priceData$return <- return
+priceData$return[378]
+head(newwithoutoutlierdata$Date)
+colnames(newwithoutoutlierdata)<-c('fromNode','toNode','Date','totalAmount')
+newwithoutoutlierdata$Date[4]
+class(priceData$Date)
+```
+merge both the dataframes according to dates
+```{r}
+newdataset <- merge(newwithoutoutlierdata,priceData,by = "Date")
+head(newdataset$Date)
+```
+
+
+Creating  a feature of no of transactions from the data for doing simple linear regression.
+
+```{r}
+frequencytrans <- table(newdataset$Date)
+freqtrans<- as.data.frame(frequencytrans)
+summary(freqtrans)
+colnames(freqtrans) <- c("Date","no_of_trans")
+freqtrans$Date <- as.Date(freqtrans$Date)
+```
+mergeing 
+ freq trans with newdataset
+ 
+```{r}
+newsimpletable <- merge(priceData,freqtrans,by = "Date")
+head(newsimpletable$return)
+newsimpletable<- newsimpletable[,c(-2:-7)]
+head(newsimpletable$no_of_trans)
+```
+Data Preparation:
+
+```{r}
+summary(newsimpletable)
+hist(newsimpletable$no_of_trans)
+hist(newsimpletable$return)
+```
+
+Analysis:
+
+```{r}
+par(mfrow = c(1,1))
+bx = boxplot(newsimpletable$no_of_trans,ylim = c(0,5000))
+```
+checking the distribution of no of transactions:
+
+```{r}
+quantile(newsimpletable$no_of_trans, seq(0,1,0.02))
+```
+boxplot stats:
+```{r}
+bx$stats
+```
+```{r}
+summary(newsimpletable$no_of_trans)
+```
+capping at 96%
+
+```{r}
+newsimpletable$no_of_trans<-ifelse(newsimpletable$no_of_trans>2000,1500,newsimpletable$no_of_trans)
+boxplot(newsimpletable$no_of_trans)
+```
+checking the response variable:
+
+```{r}
+boxplot(newsimpletable$return)
+```
+bivariate analysis:
+
+```{r}
+plot(newsimpletable$no_of_trans,newsimpletable$return)
+```
+
+lets check the correlation:
+
+```{r}
+cor(newsimpletable[,c(2,3)])
+```
+
+fitting the linear model:
+
+```{r}
+library(fmsb)
+final_data <- lm(return~no_of_trans,data=newsimpletable)
+VIF(final_data)
+summary(final_data)
+library(lmtest)
+par(mfrow = c(2,2))
+plot(final_data)
+```
+ now trying by taking the sqaureroot of the predictor variable:
+ 
+ 
+```{r}
+newsimpletable$no_of_trans <- (newsimpletable$no_of_trans)^(0.5)
+final_data <- lm(return~no_of_trans,data=newsimpletable)
+VIF(final_data)
+summary(final_data)
+```
+creating 2 new features no of tokens and no of buys:
+
+so first dividing the total amount of the dataset with 10^8 to find the no of tokens and then grouping it and adding it acording to the date
+```{r}
+newdataset$totalAmount <- (newdataset$totalAmount/(10^8))
+tokentable <- aggregate(newdataset$totalAmount, by = list(Category = newdataset$Date), FUN = sum)
+head(tokentable)
+colnames(tokentable)<- c("Date","total_token")
+newsimpletable <- merge(newsimpletable,tokentable,by = "Date")
+class(newdataset$Date)
+buyerstable <- aggregate(data=newdataset, toNode ~ Date, function(x) length(unique(x)))
+head(buyerstable)
+summary(buyerstable)
+colnames(buyerstable) <- c("Date","unique_buyers")
+newsimpletable  <- merge(newsimpletable,buyerstable,by = "Date")
+```
+
+time for data preparation:
+
+```{r}
+summary(newsimpletable)
+```
+
+then lets do univariate analysis on all independent variables
+
+```{r}
+par(mfrow=c(1,2))
+bx = boxplot(newsimpletable$no_of_trans)
+```
+capping the outliers:
+
+```{r}
+# quantile(newsimpletable$no_of_trans, seq(0,1,0.02))
+# newsimpletable$no_of_trans<-ifelse(newsimpletable$no_of_trans>60,59,newsimpletable$no_of_trans)
+# boxplot(newsimpletable$no_of_trans)
+```
+checking unique buyers:
+```{r}
+par(mfrow=c(1,2))
+bx = boxplot(newsimpletable$unique_buyers)
+quantile(newsimpletable$unique_buyers, seq(0,1,0.02))
+newsimpletable$unique_buyers<-ifelse(newsimpletable$unique_buyers>3087,3088,newsimpletable$unique_buyers)
+boxplot(newsimpletable$unique_buyers)
+```
+
+checking for no of tokens:
+
+```{r}
+par(mfrow=c(1,2))
+bx = boxplot(newsimpletable$total_token)
+quantile(newsimpletable$total_token, seq(0,1,0.02))
+newsimpletable$total_token<-ifelse(newsimpletable$total_token>5791001,5791001,newsimpletable$total_token)
+boxplot(newsimpletable$total_token)
+```
+
+lets check the response variable:
+
+```{r}
+hist(newsimpletable$return)
+par(mfrow=c(1,2))
+bx = boxplot(newsimpletable$return)
+```
+bivariate analysis:
+
+square root number of transactions vs return:
+
+```{r}
+plot(newsimpletable$no_of_trans,newsimpletable$return)
+```
+
+lets check for total token vs return:
+
+```{r}
+plot(newsimpletable$total_token,newsimpletable$return)
+```
+
+lets check unique buyers vs return:
+
+```{r}
+plot(newsimpletable$unique_buyers,newsimpletable$return)
+```
+lets check the correlation:
+
+```{r}
+cor(newsimpletable[,c(2:5)])
+```
+
+lets make the initial linear model:
+```{r}
+final_data2 <- lm(return~no_of_trans+total_token+unique_buyers+percentage_investors,data = newsimpletable)
+summary(final_data2)
+step(final_data2)
+final_data3 <- lm(formula = return ~ no_of_trans + percentage_investors, data = newsimpletable)
+summary(final_data3)
+final_data4 <- lm(formula = return ~ total_token, data = newsimpletable)
+summary(final_data4)
+plot(final_data3)
+```
+lets extract one more feature
+no of investors who have bought more than ten token:
+
+```{r}
+library(dplyr)
+summary(newdataset)
+```
+
+we will first need to find the total number of investors per day and then find the  total tokens  bought by each investor per day. then we have to find the number pf investors who bought more than 10 token that day.
+
+
+```{r}
+investortable <- newdataset %>% group_by(Date)
+totalinvestor_table<- summarize(investortable , total_investors = n_distinct(toNode))
+head(totalinvestor_table)
+newinvestortable <- newdataset %>% group_by(Date,toNode)
+newinvestortable_totaltoken <- summarise(newinvestortable,total_token = sum(totalAmount))
+summary(newinvestortable_totaltoken)
+subsetnewinvestortable_totaltoken <- newinvestortable_totaltoken[ which(newinvestortable_totaltoken$total_token>100), ]
+finalinvestortable <- summarise(subsetnewinvestortable_totaltoken, final_investors = n_distinct(toNode))
+newfinalinvestortable <- merge(totalinvestor_table,finalinvestortable,by = "Date")
+newfinalinvestortable$percentage_investors <- (newfinalinvestortable$final_investors/newfinalinvestortable$total_investors)*100
+newsimpletable <- merge(newsimpletable,newfinalinvestortable,by = "Date")
+```
+writiting the previous day fix :
+
+```{r}
+head(newsimpletable$Date)
+tail(newsimpletable$return)
+shift <- function(x, n){
+  c(x[-(seq(n))], rep(NA, n))
+}
+newsimpletable$return <- shift(newsimpletable$return, 1)
+newsimpletable <- newsimpletable[1:(nrow(newsimpletable)-1),]
+```
